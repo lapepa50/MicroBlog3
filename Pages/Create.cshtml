@@ -1,65 +1,30 @@
 ﻿@page
 @model MicroBlog.Pages.CreateModel
+
 @{
     ViewData["Title"] = "Create";
 }
 
-<html>
-<body>
-    @{
-        if (Request.Method == "POST")
-        {
-            Random random = new Random();
+<h1>New Post</h1>
 
-            Post post = new Post
-            {
-                ID = random.Next(1, 1000000),
-                Title = Request.Form["Title"].ToString(),
-                Body = Request.Form["Body"].ToString(),
-                CreatedUtc = DateTime.UtcNow
-            };
+<form method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-            string filePath = System.IO.Directory.GetCurrentDirectory() + @"\data\posts.json";
+    <div class="mb-3">
+        <label asp-for="Post.Title" class="form-label"></label>
+        <input asp-for="Post.Title" class="form-control" />
+        <span asp-validation-for="Post.Title" class="text-danger"></span>
+    </div>
 
-            List<Post> posts = [];
+    <div class="mb-3">
+        <label asp-for="Post.Body" class="form-label"></label>
+        <textarea asp-for="Post.Body" class="form-control"></textarea>
+        <span asp-validation-for="Post.Body" class="text-danger"></span>
+    </div>
 
-            if (System.IO.File.Exists(filePath))
-            {
-                string existingJson = System.IO.File.ReadAllText(filePath);
+    <button type="submit" class="btn btn-primary">Post!</button>
+</form>
 
-                if (!string.IsNullOrWhiteSpace(existingJson))
-                {
-                    posts = System.Text.Json.JsonSerializer.Deserialize<List<Post>>(existingJson) ?? [];
-                }
-            }
-
-            posts.Add(post);
-
-            string json = System.Text.Json.JsonSerializer.Serialize(
-                posts,
-                new System.Text.Json.JsonSerializerOptions
-                {
-                    WriteIndented = true
-                });
-
-            System.IO.File.WriteAllText(filePath, json);
-            Response.Redirect("/Index");
-        }
-        else
-        {
-            <p>New Post</p>
-            <form method="post">
-                Title:<br />
-                <input asp-for="Title" class="form-control" /><br />
-                <span asp-validation-for="Title" class="text-danger"></span>
-
-                Body:<br />
-                <input asp-for="Body" class="form-control" /><br />
-                <span asp-validation-for="Body" class="text-danger"></span>
-
-                <input type="submit" value="Post!" class="submit" />
-            </form>
-        }
-    }
-</body>
-</html>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,20 +1,40 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Newtonsoft.Json;
+using MicroBlog.Models;
+using MicroBlog.Repositories;
 
 namespace MicroBlog.Pages;
 
 public class IndexModel : PageModel
 {
-    public IEnumerable<Post> Posts { get; internal set; }
+    private readonly JsonBlogRepository _jsonRepository;
+    private readonly InMemoryBlogRepository _inMemoryRepository;
+
+    public IEnumerable<Post> Posts { get; private set; } = [];
+
+    [BindProperty(SupportsGet = true)]
+    public string RepositoryType { get; set; } = "json";
+
+    public IndexModel(
+        JsonBlogRepository jsonRepository,
+        InMemoryBlogRepository inMemoryRepository)
+    {
+        _jsonRepository = jsonRepository;
+        _inMemoryRepository = inMemoryRepository;
+    }
 
     public void OnGet()
     {
-        string path = System.IO.Directory.GetCurrentDirectory() + @"\data\posts.json";
+        RepositoryType = RepositoryType.ToLowerInvariant();
 
-        string json = System.IO.File.ReadAllText(path);
-        List<Post> posts = System.Text.Json.JsonSerializer.Deserialize<List<Post>>(json);
-
-        Posts = posts;
+        Posts = RepositoryType switch
+        {
+            "memory" => _inMemoryRepository.GetAll(),
+            _ => _jsonRepository.GetAll()
+        };
     }
+
+    public string RepositoryName => RepositoryType == "memory"
+        ? "In-memory repository"
+        : "JSON repository";
 }

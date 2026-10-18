@@ -1,23 +1,38 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.ComponentModel.DataAnnotations;
+using MicroBlog.Models;
+using MicroBlog.Repositories;
 
-namespace MicroBlog.Pages
+namespace MicroBlog.Pages;
+
+public class CreateModel : PageModel
 {
-    public class CreateModel : PageModel
-    {
-        public object Title { get; internal set; }
-        public object Body { get; internal set; }
+    private readonly IBlogRepository _blogRepository;
 
-        public void OnGet()
-        {
-        }
-    }
-    public class Post
+    public CreateModel(IBlogRepository blogRepository)
     {
-        public int ID { get; set; }
-        [Required] public string Title { get; set; }
-        [Required] public string Body { get; set; }
-        public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
+        _blogRepository = blogRepository;
+    }
+
+    [BindProperty]
+    public Post Post { get; set; } = new();
+
+    public void OnGet()
+    {
+    }
+
+    public IActionResult OnPost()
+    {
+        if (!ModelState.IsValid)
+        {
+            return Page();
+        }
+
+        Post.CreatedUtc = DateTime.UtcNow;
+
+        _blogRepository.Add(Post);
+        _blogRepository.Save();
+
+        return RedirectToPage("/Index");
     }
 }
